@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import streamlit as st
 
-DATA_FOLDER = './data/'
+DATA_FOLDER = './dashboard/data/'
 CONSTITUENTS_FILE = 'broad_china_consituents.csv'
 REGIME_FILE_OPTION = ['CPI & OECD_CH (Month End)', 'CI & OECD_CH (Month End)', 'CI & OECD_CH (Monthly)']
 INDUSTRY_GROUPS_OPTION = ['Ind Gp +1M-0-ALL',
