@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import streamlit as st
 
-DATA_FOLDER = './data/'
+DATA_FOLDER = './dashboard/data/'
 CONSTITUENTS_FILE = 'broad_china_consituents.csv'
 REGIME_FILE_CPI = 'OECD_CH_Period.csv'
 REGIME_FILE_CORE_CPI = 'core cpi period.csv'
