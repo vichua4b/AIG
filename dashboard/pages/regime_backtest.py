@@ -8,8 +8,8 @@ import quantstats as qs
 df = dh.get_constituents()
 df['date'] = pd.to_datetime(df['date']).dt.date
 
-selected_regime = st.selectbox('Regime config', ['Core CPI + OECD', 'CPI + OECD'])
-regime = dh.get_regime('core_cpi' if selected_regime == 'Core CPI + OECD' else 'cpi')
+selected_regime = st.selectbox('Regime config', dh.REGIME_FILE_OPTION)
+regime = dh.get_regime(selected_regime)
 
 selected_bt = st.selectbox('Backtest config', dh.INDUSTRY_GROUPS_OPTION)
 selected_industry = dh.industry_group_selection(selected_bt)

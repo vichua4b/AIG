@@ -4,8 +4,7 @@ import streamlit as st
 
 DATA_FOLDER = './data/'
 CONSTITUENTS_FILE = 'broad_china_consituents.csv'
-REGIME_FILE_CPI = 'OECD_CH_Period.csv'
-REGIME_FILE_CORE_CPI = 'core cpi period.csv'
+REGIME_FILE_OPTION = ['CPI & OECD_CH (Month End)', 'CI & OECD_CH (Month End)', 'CI & OECD_CH (Monthly)']
 INDUSTRY_GROUPS_OPTION = ['Ind Gp +1M-0-ALL',
 'Ind Gp-0-ALL(raw)',
 'Ind Gp +1M-1-NO',
@@ -67,8 +66,8 @@ def industry_return(df: pd.DataFrame) -> pd.DataFrame:
     return industry_returns
 
 @st.cache_data
-def get_regime(type: str = 'core_cpi') -> pd.DataFrame:
-    file = DATA_FOLDER + (REGIME_FILE_CPI if type == 'cpi' else REGIME_FILE_CORE_CPI)
+def get_regime(type: str) -> pd.DataFrame:
+    file = DATA_FOLDER + type + '.csv'
     periods = pd.read_csv(file)
     periods.Period = pd.to_datetime(periods.Period)
     periods.rename(columns={'Period': 'date'}, inplace=True)
