@@ -18,7 +18,11 @@ INDUSTRY_GROUPS_OPTION = ['Ind Gp +1M-0-ALL',
 'OECD Monthend x CI-ALL_ABC',
 'OECD Monthly x CI 2.0-ALL_ABC',
 'OECD Monthly x CI-ALL_ABC',
-'OECD Monthly_M x CI 2.0-ALL_ABC'
+'OECD Monthly_M x CI 2.0-ALL_ABC',
+'OECD Monthly x CI 2.0-3+1Q_ABC',
+'OECD Monthly_M x CI 2.0-1-NO_ABC',
+'OECD Monthly_M x CI 2.0-2-1Q_ABC',
+'OECD Monthly_M x CI 2.0-3+1Q_ABC'
 ]
 
 @st.cache_data
