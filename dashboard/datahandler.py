@@ -5,24 +5,41 @@ import streamlit as st
 DATA_FOLDER = './dashboard/data/'
 CONSTITUENTS_FILE = 'broad_china_consituents.csv'
 REGIME_FILE_OPTION = ['CPI & OECD_CH (Month End)', 'CI & OECD_CH (Month End)', 'CI & OECD_CH (Monthly)']
-INDUSTRY_GROUPS_OPTION = ['Ind Gp +1M-0-ALL',
-'Ind Gp-0-ALL(raw)',
-'Ind Gp +1M-1-NO',
-'Ind Gp-1-NO(raw)',
-'Ind Gp +1M-2-1Q',
-'Ind Gp-2-1Q(raw)',
-'Ind Gp +1M-3+1Q',
-'Ind Gp-3+1Q(raw)',
-'OECD Monthend x CI-ALL_ABCD',
-'OECD Monthend x CI 2.0_ALL_ABC',
-'OECD Monthend x CI-ALL_ABC',
-'OECD Monthly x CI 2.0-ALL_ABC',
-'OECD Monthly x CI-ALL_ABC',
-'OECD Monthly_M x CI 2.0-ALL_ABC',
-'OECD Monthly x CI 2.0-3+1Q_ABC',
-'OECD Monthly_M x CI 2.0-1-NO_ABC',
-'OECD Monthly_M x CI 2.0-2-1Q_ABC',
-'OECD Monthly_M x CI 2.0-3+1Q_ABC'
+INDUSTRY_GROUPS_OPTION = [
+    # OECD CLI-based Quadrants (Ind Gp)
+    'Ind Gp-0-ALL(raw)',
+    'Ind Gp-1-NO(raw)',
+    'Ind Gp-2-1Q(raw)',
+    'Ind Gp-3+1Q(raw)',
+    # OECD CLI-based Quadrants (Ind Gp +1M)
+    'Ind Gp +1M-0-ALL',
+    'Ind Gp +1M-1-NO',
+    'Ind Gp +1M-2-1Q',
+    'Ind Gp +1M-3+1Q',
+    # OECD Monthend x CI
+    'OECD Monthend x CI-ALL_ABC',
+    'OECD Monthend x CI-ALL_ABCD',
+    # OECD Monthly x CI
+    'OECD Monthly x CI-ALL_ABC',
+    # OECD Monthend x CI 2.0
+    'OECD Monthend x CI 2.0_ALL_ABC',
+    # OECD Monthly x CI 2.0
+    'OECD Monthly x CI 2.0-ALL_ABC',
+    'OECD Monthly x CI 2.0-3+1Q_ABC',
+    # OECD Monthly_M x CI 2.0
+    'OECD Monthly_M x CI 2.0-ALL_ABC',
+    'OECD Monthly_M x CI 2.0-ALL_ABCD',
+    'OECD Monthly_M x CI 2.0-1-NO_ABC',
+    'OECD Monthly_M x CI 2.0-2-1Q_ABC',
+    'OECD Monthly_M x CI 2.0-3+1Q_ABC',
+    # OECD Monthend_M x CI
+    'OECD Monthend_M x CI 2.0-ALL_ABCD',
+    'OECD Monthend_M x CI 2.0-ALL_ABC',
+    'OECD Monthend_M x CI 2.0-1-NO_ABC',
+    'OECD Monthend_M x CI 2.0-2-1Q_ABC',
+    'OECD Monthend_M x CI 2.0-3+1Q_ABC'
+    # OECD-MEND_M_CI-PosRetOnly
+    # OECD-MEND_M_CI-PosNegRet
 ]
 
 @st.cache_data
