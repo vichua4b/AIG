@@ -2,8 +2,8 @@ import streamlit as st
 import pandas as pd
 import datahandler as dh
 import backtest as bt
-import plotly.express as px
 import quantstats as qs
+import plots as pt
 
 df = dh.get_constituents()
 df['date'] = pd.to_datetime(df['date']).dt.date
@@ -20,41 +20,17 @@ st.subheader('Selection: ' + selected_bt)
 st.dataframe(selected_industry.style.format('{:.1f}'))
 result_incl, result_excl, result_incl_ex_stag, result_excl_ex_stag, market = bt.run_backtest(selected_industry, regime, industry_return)
 
-to_plot = pd.DataFrame()
-to_plot['favour'] = (result_incl.loc[result_incl.index >= '2005-11-01']['favour_mean']).cumsum()
-to_plot['avoid'] = (result_excl.loc[result_excl.index >= '2005-11-01']['avoid_mean']).cumsum()
-to_plot['market'] = (market.loc[market.index >= '2005-11-01'].cumsum())
-to_plot['date'] = to_plot.index
-
-fig = px.line(to_plot.melt(id_vars = 'date', value_vars= ['favour', 'avoid', 'market']), x='date' , y='value' , color='variable')
-fig.update_layout(legend=dict(
-    orientation="h",
-    yanchor="bottom",
-    y=1.02,
-    xanchor="right",
-    x=1
-))
-
 st.subheader('Cumulative return')
-st.plotly_chart(fig, use_container_width=True, theme="streamlit", key=None, on_select="ignore")
-
-to_plot_ex = pd.DataFrame()
-to_plot_ex['favour'] = (result_incl_ex_stag.loc[result_incl_ex_stag.index >= '2005-11-01']['favour_mean']).cumsum()
-to_plot_ex['avoid'] = (result_excl_ex_stag.loc[result_excl_ex_stag.index >= '2005-11-01']['avoid_mean']).cumsum()
-to_plot_ex['market'] = (market.loc[market.index >= '2005-11-01'].cumsum())
-to_plot_ex['date'] = to_plot_ex.index
-
-fig_ex = px.line(to_plot_ex.melt(id_vars = 'date', value_vars= ['favour', 'avoid', 'market']), x='date' , y='value' , color='variable')
-fig_ex.update_layout(legend=dict(
-    orientation="h",
-    yanchor="bottom",
-    y=1.02,
-    xanchor="right",
-    x=1
-))
+st.plotly_chart(pt.plot(result_incl.loc[result_incl.index >= '2005-11-01'], 
+                        result_excl.loc[result_excl.index >= '2005-11-01'], 
+                        market.loc[market.index >= '2005-11-01']), 
+                use_container_width=True, theme="streamlit", key=None, on_select="ignore")
 
 st.subheader('Cumulative return (ex Stagflation)')
-st.plotly_chart(fig_ex, use_container_width=True, theme="streamlit", key=None, on_select="ignore")
+st.plotly_chart(pt.plot(result_incl_ex_stag.loc[result_incl_ex_stag.index >= '2005-11-01'], 
+                        result_excl_ex_stag.loc[result_excl_ex_stag.index >= '2005-11-01'], 
+                        market.loc[market.index >= '2005-11-01']), 
+                use_container_width=True, theme="streamlit", key=None, on_select="ignore")
 
 col1, col2, col3 = st.columns(3)
 

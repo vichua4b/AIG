@@ -2,9 +2,9 @@ import streamlit as st
 import pandas as pd
 import datahandler as dh
 import backtest as bt
-import plotly.express as px
 import quantstats as qs
 import numpy as np
+import plots as pt
 
 df = dh.get_constituents()
 df['date'] = pd.to_datetime(df['date']).dt.date
@@ -28,6 +28,7 @@ for i in selected_bt:
     tmp['avoid'] = (result_excl.loc[result_excl.index >= '2005-11-01']['avoid_mean']).cumsum()
     tmp['market'] = (market.loc[market.index >= '2005-11-01'].cumsum()) if i == selected_bt[0] else None
     tmp['date'] = tmp.index
+    tmp['OECD_CH'] = result_incl.loc[result_incl.index >= '2005-11-01']['OECD_CH']
     tmp['BT'] = i
 
     tmp2 = bt.summary_table(result_incl, result_excl, market)
@@ -49,20 +50,13 @@ for i in selected_bt:
     bt_data = pd.concat([bt_data, tmp])
     summary_data = pd.concat([summary_data, tmp2])
 
-to_plot = bt_data.melt(id_vars = ['date', 'BT'], value_vars= ['favour', 'avoid', 'market'])
-to_plot['label'] = np.where(to_plot['variable'] != 'market', to_plot['BT'] + "-" + to_plot['variable'], 'market')
 
-fig = px.line(to_plot, x='date' , y='value', color='label')
-fig.update_layout(legend=dict(
-    orientation="h",
-    yanchor="bottom",
-    y=1.02,
-    xanchor="right",
-    x=1
-))
+to_plot = bt_data.melt(id_vars = ['date', 'BT', 'OECD_CH'], value_vars= ['favour', 'avoid', 'market'])
+to_plot['label'] = np.where(to_plot['variable'] != 'market', to_plot['BT'] + "-" + to_plot['variable'], 'market')
+to_plot = to_plot[to_plot['value'].notna()]
 
 st.subheader('Cumulative return')
-st.plotly_chart(fig, use_container_width=True, theme="streamlit", key=None, on_select="ignore")
+st.plotly_chart(pt.plot_multi(to_plot), use_container_width=True, theme="streamlit", key=None, on_select="ignore")
 
 summary_data = summary_data.reset_index().set_index(['BT', 'OECD_CH']).unstack('BT')
 summary_data = summary_data.iloc[:, (len(selected_bt) - 1):]
