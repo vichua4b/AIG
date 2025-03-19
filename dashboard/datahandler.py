@@ -40,8 +40,11 @@ INDUSTRY_GROUPS_OPTION = [
     'OECD Monthend_M x CI 2.0-3+1Q_ABC',
     # OECD-MEND_M_CI-PosRetOnly
     'OECD-MEND_M_CI-PosRetOnly-1-NO',
+    'OECD-MEND_M_CI-PosRetOnly-1-NO-2022',
     # OECD-MEND_M_CI-PosNegRet
-    'OECD-MEND_M_CI-PosNegRet-1-NO'
+    'OECD-MEND_M_CI-PosNegRet-1-NO',
+    'OECD-MEND_M_CI-PosNegRet-1-NO-2022',
+    'OECD-MEND_M_CI-PosNegRetNoStag-1-NO-2022'
 ]
 
 @st.cache_data

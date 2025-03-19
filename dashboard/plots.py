@@ -1,5 +1,6 @@
 import plotly.graph_objects as go
 import plotly.express as px
+import pandas as pd
 
 COLOUR_MAP = {
     'Stagflation': '#E6A8D7',  # Pastel Orchid
@@ -7,6 +8,44 @@ COLOUR_MAP = {
     'Reccesion': '#B7D7B5',  # Pastel Mint Green
     'Recovery': '#F4C7A1',  # Pastel Peach
 }
+
+def plot_summary(summary_data, pick):
+    cols = summary_data.columns
+    s2 = summary_data.loc[pick]
+    mkt = summary_data.loc['market']
+    mkt.reset_index(inplace=True)
+    mkt['BT'] = 'Market'
+    s2.reset_index(inplace=True)
+    s2 = pd.concat([s2, mkt])
+    s2_melted = s2.melt(id_vars=['BT'], value_vars=cols,
+                        var_name='value_type', value_name='value')
+
+    fig = go.Figure()
+
+    # Loop through each category to create a trace for each
+    for category in s2_melted['BT'].unique():
+        category_data = s2_melted[s2_melted['BT'] == category]
+        fig.add_trace(go.Bar(
+            x=category_data['value_type'],
+            y=category_data['value'], 
+            name=category
+        ))
+
+    # Update the layout for the chart
+    fig.update_layout(
+        title="Avergae return",
+        xaxis_title="Cycle",
+        yaxis_title="Return",
+        barmode='group',  # Group the bars by category
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="right",
+            x=1
+        )
+    )
+    return fig
 
 def plot_multi(to_plot):
     fig = px.line(to_plot, x='date' , y='value', color='label')
