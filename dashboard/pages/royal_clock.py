@@ -46,8 +46,6 @@ time_points = to_plot['date']
 x_values = to_plot['dist_CPI'] 
 y_values = to_plot['dist_OECD'] 
 
-st.dataframe(df[[cpi, 'OECD_CH', 'dist_CPI', 'dist_OECD']])
-
 # Create the frames for the animation with the lookback window
 frames = [
     go.Frame(
@@ -192,3 +190,7 @@ fig.update_layout(
 )
 
 st.plotly_chart(fig)
+
+st.write('')
+st.write('Underlying data')
+st.dataframe(df[[cpi, 'OECD_CH', 'dist_CPI', 'dist_OECD']])
