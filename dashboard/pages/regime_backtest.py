@@ -32,52 +32,55 @@ st.plotly_chart(pt.plot(result_incl_ex_stag.loc[result_incl_ex_stag.index >= '20
                         market.loc[market.index >= '2005-11-01']), 
                 use_container_width=True, theme="streamlit", key=None, on_select="ignore")
 
-col1, col2, col3 = st.columns(3)
+s_col1, s_col2 = st.columns(2)
+with s_col1:
+    st.write('Average return in each period (Prior 2023)')
+    summary1 = bt.summary_table(result_incl.loc[result_incl.index < '2023-01-01'], result_excl.loc[result_excl.index < '2023-01-01'], market.loc[market.index < '2023-01-01'])
+    st.dataframe((summary1*100).style.format('{:.2f}%'))
+with s_col2:
+    st.write('Average return in each period (2023 onwards)')
+    summary2 = bt.summary_table(result_incl.loc[result_incl.index >= '2023-01-01'], result_excl.loc[result_excl.index >= '2023-01-01'], market.loc[market.index >= '2023-01-01'])
+    st.dataframe((summary2*100).style.format('{:.2f}%'))
 
+st.write('Backtest stats')
+col1, col2, col3 = st.columns(3)
 with col1:
-    st.write('Average return in each period')
-    summary = bt.summary_table(result_incl, result_excl, market)
-    st.dataframe((summary*100).style.format('{:.2f}%'))
+    st.write('ALL')
+    st.dataframe(bt.bt_stats(result_incl.loc[result_incl.index >= '2005-11-01'],
+                result_excl.loc[result_excl.index >= '2005-11-01'],
+                market.loc[market.index >= '2005-11-01']))
 
 with col2:
-    st.write('Backtest stats')
-    stats = {'cagr': qs.stats.cagr(result_incl.loc[result_incl.index >= '2000-11-01']['favour_mean'], compounded=False),
-             'volatility': qs.stats.volatility(result_incl.loc[result_incl.index >= '2000-11-01']['favour_mean']),
-             'sharpe': qs.stats.sharpe(result_incl.loc[result_incl.index >= '2000-11-01']['favour_mean']),
-             'mdd': qs.stats.max_drawdown(result_incl.loc[result_incl.index >= '2000-11-01']['favour_mean'])
-            }
-    stats_a = {'cagr': qs.stats.cagr(result_excl.loc[result_excl.index >= '2000-11-01']['avoid_mean'], compounded=False),
-             'volatility': qs.stats.volatility(result_excl.loc[result_excl.index >= '2000-11-01']['avoid_mean']),
-             'sharpe': qs.stats.sharpe(result_excl.loc[result_excl.index >= '2000-11-01']['avoid_mean']),
-             'mdd': qs.stats.max_drawdown(result_excl.loc[result_excl.index >= '2000-11-01']['avoid_mean'])
-            }
-    # Add in market
-    stats_m = {'cagr': qs.stats.cagr(market.loc[market.index >= '2005-11-01'], compounded=False),
-                'volatility': qs.stats.volatility(market.loc[market.index >= '2005-11-01']),
-                'sharpe': qs.stats.sharpe(market.loc[market.index >= '2005-11-01']),
-                'mdd': qs.stats.max_drawdown(market.loc[market.index >= '2005-11-01'])
-                }
-    st.dataframe(pd.DataFrame([stats_m, stats, stats_a], index=['Market', 'Favour', 'Avoid']).transpose())
+    st.write('Prior 2023')
+    st.dataframe(bt.bt_stats(result_incl.loc[(result_incl.index >= '2005-11-01') & (result_incl.index < '2023-01-01')],
+                result_excl.loc[(result_excl.index >= '2005-11-01') & (result_excl.index < '2023-01-01')],
+                market.loc[(market.index >= '2005-11-01') & (market.index < '2023-01-01')]))
 
 with col3:
-    st.write('Backtest stats (ex Stag)')
-    stats = {'cagr': qs.stats.cagr(result_incl_ex_stag.loc[result_incl_ex_stag.index >= '2000-11-01']['favour_mean'], compounded=False),
-             'volatility': qs.stats.volatility(result_incl_ex_stag.loc[result_incl_ex_stag.index >= '2000-11-01']['favour_mean']),
-             'sharpe': qs.stats.sharpe(result_incl_ex_stag.loc[result_incl_ex_stag.index >= '2000-11-01']['favour_mean']),
-             'mdd': qs.stats.max_drawdown(result_incl_ex_stag.loc[result_incl_ex_stag.index >= '2000-11-01']['favour_mean'])
-            }
-    stats_a = {'cagr': qs.stats.cagr(result_excl_ex_stag.loc[result_excl_ex_stag.index >= '2000-11-01']['avoid_mean'], compounded=False),
-             'volatility': qs.stats.volatility(result_excl_ex_stag.loc[result_excl_ex_stag.index >= '2000-11-01']['avoid_mean']),
-             'sharpe': qs.stats.sharpe(result_excl_ex_stag.loc[result_excl_ex_stag.index >= '2000-11-01']['avoid_mean']),
-             'mdd': qs.stats.max_drawdown(result_excl_ex_stag.loc[result_excl_ex_stag.index >= '2000-11-01']['avoid_mean'])
-            }
-    # Add in market
-    stats_m = {'cagr': qs.stats.cagr(market.loc[market.index >= '2005-11-01'], compounded=False),
-                'volatility': qs.stats.volatility(market.loc[market.index >= '2005-11-01']),
-                'sharpe': qs.stats.sharpe(market.loc[market.index >= '2005-11-01']),
-                'mdd': qs.stats.max_drawdown(market.loc[market.index >= '2005-11-01'])
-                }
-    st.dataframe(pd.DataFrame([stats_m, stats, stats_a], index=['Market', 'Favour', 'Avoid']).transpose())
+    st.write('2023 onwards')
+    st.dataframe(bt.bt_stats(result_incl.loc[(result_incl.index >= '2023-01-01')],
+                result_excl.loc[(result_excl.index >= '2023-01-01')],
+                market.loc[(market.index >= '2023-01-01')]))
+
+st.write('Backtest stats (ex Stag)')
+ex_col1, ex_col2, ex_col3 = st.columns(3)
+with ex_col1:
+    st.write('ALL')
+    st.dataframe(bt.bt_stats(result_incl_ex_stag.loc[result_incl_ex_stag.index >= '2005-11-01'],
+                result_excl_ex_stag.loc[result_excl_ex_stag.index >= '2005-11-01'],
+                market.loc[market.index >= '2005-11-01']))
+
+with ex_col2:
+    st.write('Prior 2023')
+    st.dataframe(bt.bt_stats(result_incl_ex_stag.loc[(result_incl_ex_stag.index >= '2005-11-01') & (result_incl_ex_stag.index < '2023-01-01')],
+                result_excl_ex_stag.loc[(result_excl_ex_stag.index >= '2005-11-01') & (result_excl_ex_stag.index < '2023-01-01')],
+                market.loc[(market.index >= '2005-11-01') & (market.index < '2023-01-01')]))
+
+with ex_col3:
+    st.write('2023 onwards')
+    st.dataframe(bt.bt_stats(result_incl_ex_stag.loc[(result_incl_ex_stag.index >= '2023-01-01')],
+                result_excl_ex_stag.loc[(result_excl_ex_stag.index >= '2023-01-01')],
+                market.loc[(market.index >= '2023-01-01')]))
 
 st.subheader('Favour monthly return')
 fig = qs.plots.monthly_returns(result_incl.loc[result_incl.index >= '2000-11-01']['favour_mean'], compounded=False, show=False)
