@@ -6,6 +6,9 @@ import numpy as np
 
 st.header('Royal clock')
 
+region_options = ['CN', 'US']
+region = st.radio('Region', region_options, horizontal=True)
+
 col1, col2, col3, col4 = st.columns(4)
 frequency_options = ['monthly', 'quarterly']
 cpi_options = ['CPI', 'Core CPI']
@@ -23,13 +26,14 @@ with col4:
 
 points = st.slider('Points show', 1, 10) - 1 # -1 to include current
 
-df = pd.read_csv(dh.DATA_FOLDER + 'econ_data.csv')
+df = pd.read_csv(dh.DATA_FOLDER + region + '_econ_data.csv')
 df['date_idx'] = pd.to_datetime(df['date'])
 df.set_index('date_idx', inplace=True)
-df['CPI_12MA'] = df[cpi].rolling(window=lookback).mean()
-df['OECD_12MA'] = df['OECD_CH'].rolling(window=lookback).mean()
-df['dist_CPI'] = df[cpi] - df['CPI_12MA']
-df['dist_OECD'] = df['OECD_CH'] - df['OECD_12MA']
+df.sort_index(ascending=True, inplace=True)
+df['CPI_MA'] = df[cpi].rolling(window=lookback).mean()
+df['OECD_MA'] = df['OECD'].rolling(window=lookback).mean()
+df['dist_CPI'] = df[cpi] - df['CPI_MA']
+df['dist_OECD'] = df['OECD'] - df['OECD_MA']
 
 if freq == 'quarterly':
     df = df.resample('QE').last()
@@ -193,4 +197,4 @@ st.plotly_chart(fig)
 
 st.write('')
 st.write('Underlying data')
-st.dataframe(df[[cpi, 'OECD_CH', 'dist_CPI', 'dist_OECD']])
+st.dataframe(df[[cpi, 'OECD', 'CPI_MA', 'OECD_MA', 'dist_CPI', 'dist_OECD']])
