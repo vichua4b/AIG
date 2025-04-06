@@ -24,13 +24,13 @@ st.subheader('Cumulative return')
 st.plotly_chart(pt.plot(result_incl.loc[result_incl.index >= '2005-11-01'], 
                         result_excl.loc[result_excl.index >= '2005-11-01'], 
                         market.loc[market.index >= '2005-11-01']), 
-                use_container_width=True, theme="streamlit", key=None, on_select="ignore")
+                use_container_width=True, theme="streamlit", key=54321, on_select="ignore")
 
 st.subheader('Cumulative return (ex Stagflation)')
 st.plotly_chart(pt.plot(result_incl_ex_stag.loc[result_incl_ex_stag.index >= '2005-11-01'], 
                         result_excl_ex_stag.loc[result_excl_ex_stag.index >= '2005-11-01'], 
                         market.loc[market.index >= '2005-11-01']), 
-                use_container_width=True, theme="streamlit", key=None, on_select="ignore")
+                use_container_width=True, theme="streamlit", key=12345, on_select="ignore")
 
 s_col1, s_col2 = st.columns(2)
 with s_col1:
