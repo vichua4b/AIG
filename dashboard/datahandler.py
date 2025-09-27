@@ -3,6 +3,8 @@ import numpy as np
 import streamlit as st
 
 DATA_FOLDER = './dashboard/data/'
+# local path
+# DATA_FOLDER = './data/'
 CONSTITUENTS_FILE = 'broad_china_consituents.csv'
 REGIME_FILE_OPTION = ['CPI & OECD_CH (Month End)', 'CI & OECD_CH (Month End)', 'CI & OECD_CH (Monthly)']
 INDUSTRY_GROUPS_OPTION = [
@@ -109,3 +111,21 @@ def industry_group_selection(select: str) -> pd.DataFrame:
     selection = selection.transpose()
 
     return selection
+
+@st.cache_data
+def load_etf_prices() -> pd.DataFrame:
+    df = pd.read_csv(f"{DATA_FOLDER}etf_prices.csv")
+    df['date'] = pd.to_datetime(df['date'], format='%Y-%m-%d')
+    df.set_index('date', inplace=True)
+    # resample to monthend
+    df = df.resample('M').last()
+    return df
+
+@st.cache_data
+def load_indicator_prices() -> pd.DataFrame:
+    df = pd.read_csv(f"{DATA_FOLDER}indicator_prices.csv")
+    df['date'] = pd.to_datetime(df['date'], format='%Y-%m-%d')
+    df.set_index('date', inplace=True)
+    # resample to monthend
+    df = df.resample('M').last()
+    return df
