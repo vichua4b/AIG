@@ -50,7 +50,7 @@ st.plotly_chart(fig, use_container_width=True, theme="streamlit", key=None, on_s
 # Rolling correlation
 st.header('Rolling correlation')
 st.write('Indicator months lag (selected above): ', indicator_months_lag)
-horizon = st.slider('Rolling window (month)', 6, 36, 6)
+horizon = st.slider('Rolling window (month)', 6, 36, 6, 6)
 
 # select etf and indicator to show
 r_col1, r_col2 = st.columns(2)
