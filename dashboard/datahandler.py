@@ -2,6 +2,11 @@ import pandas as pd
 import numpy as np
 import streamlit as st
 
+# Google sheet constants
+GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1wvq1dhhVmtaoqMLLZwNrtv8dUSk8t5LHJHZJ5wcFUi0/export?format=csv&gid='
+GOOGLE_ETF_SHEET_GRID = '403272206'
+GOOGLE_MASTER_SHEET_GRID = '905030353'
+GOOGLE_NAME_REF_SHEET_GRID = '1267495009'
 DATA_FOLDER = './dashboard/data/'
 # local path
 # DATA_FOLDER = './data/'
@@ -114,18 +119,23 @@ def industry_group_selection(select: str) -> pd.DataFrame:
 
 @st.cache_data
 def load_etf_prices() -> pd.DataFrame:
-    df = pd.read_csv(f"{DATA_FOLDER}etf_prices.csv")
+    df = pd.read_csv(f"{GOOGLE_SHEET_URL}{GOOGLE_ETF_SHEET_GRID}")
     df['date'] = pd.to_datetime(df['date'], format='%Y-%m-%d')
     df.set_index('date', inplace=True)
     # resample to monthend
-    df = df.resample('M').last()
+    df = df.resample('ME').apply(lambda x: x.ffill().iloc[-1])
     return df
 
 @st.cache_data
 def load_indicator_prices() -> pd.DataFrame:
-    df = pd.read_csv(f"{DATA_FOLDER}indicator_prices.csv")
+    df = pd.read_csv(f"{GOOGLE_SHEET_URL}{GOOGLE_MASTER_SHEET_GRID}")
     df['date'] = pd.to_datetime(df['date'], format='%Y-%m-%d')
     df.set_index('date', inplace=True)
     # resample to monthend
-    df = df.resample('M').last()
+    df = df.resample('ME').apply(lambda x: x.ffill().iloc[-1])
+    return df
+
+@st.cache_data
+def load_name_ref() -> pd.DataFrame:
+    df = pd.read_csv(f"{GOOGLE_SHEET_URL}{GOOGLE_NAME_REF_SHEET_GRID}")
     return df
