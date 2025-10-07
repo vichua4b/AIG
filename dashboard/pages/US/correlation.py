@@ -23,7 +23,7 @@ indicator_display_map = dict(zip(indicator_display, indicator_list))
 # combine etf and indicator prices
 df = pd.merge(etf_prices, indicator_prices, left_index=True, right_index=True, how='inner')
 # returns
-df_ret = df.pct_change(fill_method=None).pct_change().dropna().reset_index()
+df_ret = df.pct_change(fill_method=None).pct_change().reset_index()
 
 st.header('Correlation matrix')
 # select months lag
