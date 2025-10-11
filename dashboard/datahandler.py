@@ -7,6 +7,9 @@ GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1wvq1dhhVmtaoqMLLZwNr
 GOOGLE_ETF_SHEET_GRID = '403272206'
 GOOGLE_MASTER_SHEET_GRID = '905030353'
 GOOGLE_NAME_REF_SHEET_GRID = '1267495009'
+
+GOOGLE_US_ECON_SHEET_GRID = 'https://docs.google.com/spreadsheets/d/1nRI_r4qAkUdGc1L750AHeXULnYwPeAvYli4bbpeB7AM/export?format=csv&gid=731885871'
+
 DATA_FOLDER = './dashboard/data/'
 # local path
 # DATA_FOLDER = './data/'
@@ -123,7 +126,8 @@ def load_etf_prices() -> pd.DataFrame:
     df['date'] = pd.to_datetime(df['date'], format='%Y-%m-%d')
     df.set_index('date', inplace=True)
     # resample to monthend
-    df = df.resample('ME').apply(lambda x: x.ffill().iloc[-1])
+    df = df.ffill()  # Forward fill all columns globally
+    df = df.resample('ME').last()
     return df
 
 @st.cache_data
@@ -132,10 +136,17 @@ def load_indicator_prices() -> pd.DataFrame:
     df['date'] = pd.to_datetime(df['date'], format='%Y-%m-%d')
     df.set_index('date', inplace=True)
     # resample to monthend
-    df = df.resample('ME').apply(lambda x: x.ffill().iloc[-1])
+    df = df.ffill()  # Forward fill all columns globally
+    df = df.resample('ME').last()
     return df
 
 @st.cache_data
 def load_name_ref() -> pd.DataFrame:
     df = pd.read_csv(f"{GOOGLE_SHEET_URL}{GOOGLE_NAME_REF_SHEET_GRID}")
+    return df
+
+@st.cache_data
+def load_us_econ_data() -> pd.DataFrame:
+    df = pd.read_csv(GOOGLE_US_ECON_SHEET_GRID)
+    df['date'] = pd.to_datetime(df['date'], format='%Y-%m-%d')
     return df

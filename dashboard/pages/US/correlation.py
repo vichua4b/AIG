@@ -23,7 +23,7 @@ indicator_display_map = dict(zip(indicator_display, indicator_list))
 # combine etf and indicator prices
 df = pd.merge(etf_prices, indicator_prices, left_index=True, right_index=True, how='inner')
 # returns
-df_ret = df.pct_change(fill_method=None).pct_change().reset_index()
+df_ret = df.pct_change().reset_index()
 
 st.header('Correlation matrix')
 # select months lag
@@ -41,9 +41,6 @@ with col2:
     edate = st.date_input('End date', min_value=df_ret['date'].min(), max_value=df_ret['date'].max(), value=df_ret['date'].max())
     multiSelect_indicator_display = st.multiselect('Select Indicator', indicator_display, default=indicator_display[:5])
     multiSelect_indicator = [indicator_display_map[indicator] for indicator in multiSelect_indicator_display]
-
-# show raw table to check
-# st.dataframe(df, hide_index=True, use_container_width=True)
 
 filtered_df = df_ret[(df_ret['date'] >= pd.to_datetime(sdate)) & (df_ret['date'] <= pd.to_datetime(edate))]
 correlation = filtered_df.corr()
@@ -90,8 +87,43 @@ st.plotly_chart(fig2, use_container_width=True, theme="streamlit", key=None, on_
 
 
 # Price history
+import plotly.graph_objects as go
 st.header('Price history')
 prices = df[[selected_etf, selected_indicator]].copy()
-fig3 = px.line(prices, x=df.index, y=[selected_etf, selected_indicator])
-fig3.update_layout(title=f'Price history of {selected_etf} and {selected_indicator}', xaxis_title='Date', yaxis_title='Price')
+
+fig3 = go.Figure()
+
+# ETF price on primary y-axis
+fig3.add_trace(go.Scatter(
+    x=prices.index,
+    y=prices[selected_etf],
+    name=selected_etf,
+    yaxis='y1'
+))
+
+# Indicator level on secondary y-axis
+fig3.add_trace(go.Scatter(
+    x=prices.index,
+    y=prices[selected_indicator],
+    name=selected_indicator,
+    yaxis='y2'
+))
+
+fig3.update_layout(
+    title=f'Price history of {selected_etf} and {selected_indicator}',
+    xaxis_title='Date',
+    yaxis=dict(
+        title=f'{selected_etf} Price'
+    ),
+    yaxis2=dict(
+        title=f'{selected_indicator} Level',
+        overlaying='y',
+        side='right'
+    ),
+    legend=dict(x=0.01, y=0.99)
+)
+
 st.plotly_chart(fig3, use_container_width=True, theme="streamlit", key=None, on_select="ignore")
+
+# show raw table to check
+st.dataframe(prices, hide_index=False, width='stretch')
