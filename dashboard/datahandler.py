@@ -8,7 +8,10 @@ GOOGLE_ETF_SHEET_GRID = '403272206'
 GOOGLE_MASTER_SHEET_GRID = '905030353'
 GOOGLE_NAME_REF_SHEET_GRID = '1267495009'
 
-GOOGLE_US_ECON_SHEET_GRID = 'https://docs.google.com/spreadsheets/d/1nRI_r4qAkUdGc1L750AHeXULnYwPeAvYli4bbpeB7AM/export?format=csv&gid=731885871'
+GOOGLE_US_ECON_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1nRI_r4qAkUdGc1L750AHeXULnYwPeAvYli4bbpeB7AM/export?format=csv&gid='
+GOOGLE_US_NEWS_SHEET_GRID = '1020638433'
+GOOGLE_US_CONGRESS_SHEET_GRID = '598725487'
+GOOGLE_US_BULL_BEAR_SHEET_GRID = '731885871'
 
 DATA_FOLDER = './dashboard/data/'
 # local path
@@ -146,7 +149,38 @@ def load_name_ref() -> pd.DataFrame:
     return df
 
 @st.cache_data
-def load_us_econ_data() -> pd.DataFrame:
-    df = pd.read_csv(GOOGLE_US_ECON_SHEET_GRID)
+def load_us_news_data() -> pd.DataFrame:
+    df = pd.read_csv(f"{GOOGLE_US_ECON_SHEET_URL}{GOOGLE_US_NEWS_SHEET_GRID}")
     df['date'] = pd.to_datetime(df['date'], format='%Y-%m-%d')
+    return df
+
+@st.cache_data
+def load_us_congress_data() -> pd.DataFrame:
+    df = pd.read_csv(f"{GOOGLE_US_ECON_SHEET_URL}{GOOGLE_US_CONGRESS_SHEET_GRID}")
+    # Parse Congress column to get start_date and end_date
+    df[['Congress_num', 'years']] = df['Congress'].str.extract(r'(\d+[a-z]{2}) \(([\d–]+)\)')
+    df[['start_year', 'end_year']] = df['years'].str.split('–', expand=True)
+    df['start_date'] = pd.to_datetime(df['start_year'], format='%Y')
+    df['end_date'] = pd.to_datetime(df['end_year'], format='%Y') + pd.DateOffset(years=1) - pd.DateOffset(days=1)
+
+    # Reshape to long format
+    long_df = df.melt(
+        id_vars=['Congress', 'start_date', 'end_date', 'Party Government'],
+        value_vars=['House Majority', 'Senate Majority', 'Presidency'],
+        var_name='category',
+        value_name='desc'
+    )
+    long_df['comment'] = long_df['Party Government']
+
+    # Select relevant columns
+    long_df = long_df[['start_date', 'end_date', 'category', 'desc', 'comment']]
+
+    return long_df
+
+@st.cache_data
+def load_us_bull_bear_data() -> pd.DataFrame:
+    df = pd.read_csv(f"https://docs.google.com/spreadsheets/d/1wvq1dhhVmtaoqMLLZwNrtv8dUSk8t5LHJHZJ5wcFUi0/export?format=csv&gid=374464057")
+    df.dropna(inplace=True)
+    df['start date'] = pd.to_datetime(df['start date'], format='%Y-%m-%d')
+    df['end date'] = pd.to_datetime(df['end date'], format='%Y-%m-%d')
     return df

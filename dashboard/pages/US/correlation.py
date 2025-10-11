@@ -123,7 +123,34 @@ fig3.update_layout(
     legend=dict(x=0.01, y=0.99)
 )
 
+bull_bear = dh.load_us_bull_bear_data()
+def get_bull_bear_color(comment):
+    if '牛' in comment:
+        return 'rgba(0,200,0,0.15)'  # light green for bull
+    elif '熊' in comment:
+        return 'rgba(200,0,0,0.15)'  # light red for bear
+    else:
+        return 'rgba(128,128,128,0.08)'  # default gray
+
+for _, row in bull_bear[(bull_bear['start date'] >= prices.index.min()) | (bull_bear['end date'] >= prices.index.min())].iterrows():
+    fig3.add_vrect(
+        x0=pd.to_datetime(row.iloc[1]),
+        x1=pd.to_datetime(row.iloc[2]),
+        fillcolor=get_bull_bear_color(str(row.iloc[3])),
+        opacity=0.3,
+        layer="below",
+        line_width=0,
+        annotation_text=str(row.iloc[3]),
+        annotation_position="top left",
+        annotation=dict(font_size=10, font_color='black')
+    )
+
+
 st.plotly_chart(fig3, use_container_width=True, theme="streamlit", key=None, on_select="ignore")
 
 # show raw table to check
 st.dataframe(prices, hide_index=False, width='stretch')
+# congress = dh.load_us_congress_data()
+# st.dataframe(congress, hide_index=True, width='stretch')
+
+st.dataframe(bull_bear, hide_index=True, width='stretch')
