@@ -4,28 +4,44 @@ import datahandler as dh
 import plotly.express as px
 import numpy as np
 
-etf_prices = dh.load_etf_prices()
-indicator_prices = dh.load_indicator_prices()
+etf_prices, etf_returns = dh.load_etf_prices()
+indicator_prices, indicator_returns, freq = dh.load_indicator_prices()
 name_ref = dh.load_name_ref()
 name_map = dict(zip(name_ref['Ticker'], name_ref['Name']))
 
+bull_bear = dh.load_us_bull_bear_data()
+def get_bull_bear_color(comment):
+    if '牛' in comment:
+        return 'rgba(0,200,0,0.15)'  # light green for bull
+    elif '熊' in comment:
+        return 'rgba(200,0,0,0.15)'  # light red for bear
+    else:
+        return 'rgba(128,128,128,0.08)'  # default gray
+
 # drop those columns in indicator_prices that are in etf_prices except date
 indicator_prices = indicator_prices.drop(columns=[col for col in indicator_prices.columns if col in etf_prices.columns and col != 'date'])
+indicator_returns = indicator_returns.drop(columns=[col for col in indicator_returns.columns if col in etf_prices.columns and col != 'date'])
 
 etf_list = etf_prices.columns.tolist()
 indicator_list = indicator_prices.columns.tolist()
 
 etf_display = [f"{etf} - {name_map.get(etf, '')}" for etf in etf_list]
+etf_display = [e.rstrip(' - ') for e in etf_display]  # in case name_map returns empty string
 etf_display_map = dict(zip(etf_display, etf_list))
 indicator_display = [f"{indicator} - {name_map.get(indicator, '')}" for indicator in indicator_list]
+indicator_display = [i.rstrip(' - ') for i in indicator_display]  # in case name_map returns empty string
 indicator_display_map = dict(zip(indicator_display, indicator_list))
 
 # combine etf and indicator prices
 df = pd.merge(etf_prices, indicator_prices, left_index=True, right_index=True, how='inner')
 # returns
-df_ret = df.pct_change().reset_index()
+df_ret = pd.merge(etf_returns, indicator_returns, left_index=True, right_index=True, how='inner')
+df_ret.reset_index(inplace=True)
 
 st.header('Correlation matrix')
+st.write("Data frequency handling: Returns are calculated based on its own frequency (e.g. quarterly / monthly). \n And then forward filled the lower frequency (quarterly -> monthly).")
+st.write("Ideally we should align to the lower frequency (monthly -> quarterly) instead of forward fill, but for simplicity and initial analysis, we do forward fill here.")
+
 # select months lag
 indicator_months_lag = st.slider('Indicator Months lag', 0, 12, 0)
 for indicator in indicator_list:
@@ -35,11 +51,13 @@ for indicator in indicator_list:
 col1, col2 = st.columns(2)
 with col1:
     sdate = st.date_input('Start date', min_value=df_ret['date'].min(), max_value=df_ret['date'].max(), value=df_ret['date'].min())
-    multiSelect_etf_display = st.multiselect('Select ETF', etf_display, default=etf_display[:5])
+
+    multiSelect_etf_display = st.multiselect('Select ETF', etf_display, default=etf_display)
     multiSelect_etf = [etf_display_map[etf] for etf in multiSelect_etf_display]
 with col2:
     edate = st.date_input('End date', min_value=df_ret['date'].min(), max_value=df_ret['date'].max(), value=df_ret['date'].max())
-    multiSelect_indicator_display = st.multiselect('Select Indicator', indicator_display, default=indicator_display[:5])
+
+    multiSelect_indicator_display = st.multiselect('Select Indicator', indicator_display, default=indicator_display)
     multiSelect_indicator = [indicator_display_map[indicator] for indicator in multiSelect_indicator_display]
 
 filtered_df = df_ret[(df_ret['date'] >= pd.to_datetime(sdate)) & (df_ret['date'] <= pd.to_datetime(edate))]
@@ -66,6 +84,7 @@ st.write('Indicator months lag (selected above): ', indicator_months_lag)
 horizon = st.slider('Rolling window (month)', 6, 36, 6, 6)
 
 # select etf and indicator to show
+show_bg = st.checkbox('Show background 牛熊', value=False)
 r_col1, r_col2 = st.columns(2)
 with r_col1:
     selected_etf_display = st.selectbox('Select ETF', etf_display, index=0)
@@ -83,28 +102,46 @@ rolling_corr = rolling_corr.dropna()
 
 fig2 = px.line(rolling_corr, x='date', y='correlation')
 fig2.update_layout(title=f'Rolling correlation between {selected_etf} and {selected_indicator}', xaxis_title='Date', yaxis_title='Correlation')
+
+if show_bg:
+    for _, row in bull_bear[(bull_bear['start date'] >= rolling_corr['date'].min()) | (bull_bear['end date'] >= rolling_corr['date'].min())].iterrows():
+        fig2.add_vrect(
+            x0=pd.to_datetime(row.iloc[1]),
+            x1=pd.to_datetime(row.iloc[2]),
+            fillcolor=get_bull_bear_color(str(row.iloc[3])),
+            opacity=0.3,
+            layer="below",
+            line_width=0,
+            annotation_text=str(row.iloc[3]),
+            annotation_position="top left",
+            annotation=dict(font_size=10, font_color='black')
+        )
 st.plotly_chart(fig2, use_container_width=True, theme="streamlit", key=None, on_select="ignore")
 
 
 # Price history
 import plotly.graph_objects as go
-st.header('Price history')
+import numpy as np
+st.header('Price history (log scale)')
 prices = df[[selected_etf, selected_indicator]].copy()
+prices_ln = np.log(prices)
+returns = df_ret[[selected_etf, selected_indicator]].copy()
+returns.index = df_ret['date']
 
 fig3 = go.Figure()
 
 # ETF price on primary y-axis
 fig3.add_trace(go.Scatter(
-    x=prices.index,
-    y=prices[selected_etf],
+    x=prices_ln.index,
+    y=prices_ln[selected_etf],
     name=selected_etf,
     yaxis='y1'
 ))
 
 # Indicator level on secondary y-axis
 fig3.add_trace(go.Scatter(
-    x=prices.index,
-    y=prices[selected_indicator],
+    x=prices_ln.index,
+    y=prices_ln[selected_indicator],
     name=selected_indicator,
     yaxis='y2'
 ))
@@ -123,33 +160,53 @@ fig3.update_layout(
     legend=dict(x=0.01, y=0.99)
 )
 
-bull_bear = dh.load_us_bull_bear_data()
-def get_bull_bear_color(comment):
-    if '牛' in comment:
-        return 'rgba(0,200,0,0.15)'  # light green for bull
-    elif '熊' in comment:
-        return 'rgba(200,0,0,0.15)'  # light red for bear
-    else:
-        return 'rgba(128,128,128,0.08)'  # default gray
-
-for _, row in bull_bear[(bull_bear['start date'] >= prices.index.min()) | (bull_bear['end date'] >= prices.index.min())].iterrows():
-    fig3.add_vrect(
-        x0=pd.to_datetime(row.iloc[1]),
-        x1=pd.to_datetime(row.iloc[2]),
-        fillcolor=get_bull_bear_color(str(row.iloc[3])),
-        opacity=0.3,
-        layer="below",
-        line_width=0,
-        annotation_text=str(row.iloc[3]),
-        annotation_position="top left",
-        annotation=dict(font_size=10, font_color='black')
-    )
+if show_bg:
+    for _, row in bull_bear[(bull_bear['start date'] >= prices.index.min()) | (bull_bear['end date'] >= prices.index.min())].iterrows():
+        fig3.add_vrect(
+            x0=pd.to_datetime(row.iloc[1]),
+            x1=pd.to_datetime(row.iloc[2]),
+            fillcolor=get_bull_bear_color(str(row.iloc[3])),
+            opacity=0.3,
+            layer="below",
+            line_width=0,
+            annotation_text=str(row.iloc[3]),
+            annotation_position="top left",
+            annotation=dict(font_size=10, font_color='black')
+        )
 
 
 st.plotly_chart(fig3, use_container_width=True, theme="streamlit", key=None, on_select="ignore")
 
+st.header('zscore of returns')
+
+z_etf = (returns[selected_etf] - returns[selected_etf].mean()) / returns[selected_etf].std()
+z_etf = z_etf.clip(-3, 3)
+z_indicator = (returns[selected_indicator] - returns[selected_indicator].mean()) / returns[selected_indicator].std()
+z_indicator = z_indicator.clip(-3, 3)
+fig_z = go.Figure()
+fig_z.add_trace(go.Bar(
+    x=returns.index,
+    y=z_etf,
+    name=f"{selected_etf} Return z-score"
+))
+fig_z.add_trace(go.Bar(
+    x=returns.index,
+    y=z_indicator,
+    name=f"{selected_indicator} Return z-score"
+))
+fig_z.update_layout(
+    title=f'Z-score of Returns of {selected_etf} and {selected_indicator}',
+    xaxis_title='Date',
+    yaxis=dict(
+        title=f'Return z-score'
+    ),
+    legend=dict(x=0.01, y=0.99)
+)
+st.plotly_chart(fig_z, use_container_width=True, theme="streamlit", key=None, on_select="ignore")
+
+st.header('Data Check')
 # show raw table to check
-st.dataframe(prices, hide_index=False, width='stretch')
+st.dataframe(pd.merge(prices, returns, left_index=True, right_index=True, how='inner', suffixes=('_price', '_return')), hide_index=False, width='stretch')
 # congress = dh.load_us_congress_data()
 # st.dataframe(congress, hide_index=True, width='stretch')
 

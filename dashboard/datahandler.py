@@ -131,17 +131,78 @@ def load_etf_prices() -> pd.DataFrame:
     # resample to monthend
     df = df.ffill()  # Forward fill all columns globally
     df = df.resample('ME').last()
-    return df
+    ret_df = df.pct_change()
+    return df, ret_df
+
+def detect_column_frequency(df):
+    freq_dict = {}
+    for col in df.columns:
+        # Get the index (dates) where the column is not NA
+        non_na_dates = df.index[df[col].notna()]
+        if len(non_na_dates) < 5:
+            freq_dict[col] = 'unknown'
+            continue
+        # Calculate the most common difference in months
+        diffs = non_na_dates.to_series().diff().dropna().dt.days
+        avg_diff = diffs.mean()
+        if 25 < avg_diff < 35:
+            freq_dict[col] = 'monthly'
+        elif 80 < avg_diff < 100:
+            freq_dict[col] = 'quarterly'
+        else:
+            # assume yearly
+            freq_dict[col] = 'yearly'
+    return freq_dict
+
+def calc_exact_period_return(df, freq_dict):
+    df_ret = pd.DataFrame(index=df.index)
+    for col, freq in freq_dict.items():
+        if (freq == 'monthly'):
+            # Shift by 1 calendar month
+            tmp = df[col].ffill().resample('ME').last()
+            tmp_ret = tmp.pct_change()
+            # Reindex back to original index, forward fill so all dates in the year get the same return
+            df_ret[col] = tmp_ret.reindex(df.index)
+        elif freq == 'quarterly':
+            # Shift by 1 calendar quarter
+            tmp = df[col].ffill().resample('QE').last()
+            tmp_ret = tmp.pct_change()
+            # Reindex back to original index, forward fill so all dates in the year get the same return
+            df_ret[col] = tmp_ret.reindex(df.index)
+        else:
+            # Resample to year-end, then calculate returns
+            yearly = df[col].ffill().resample('YE').last()
+            yearly_ret = yearly.pct_change()
+            # Reindex back to original index, forward fill so all dates in the year get the same return
+            df_ret[col] = yearly_ret.reindex(df.index)
+    return df_ret
 
 @st.cache_data
 def load_indicator_prices() -> pd.DataFrame:
     df = pd.read_csv(f"{GOOGLE_SHEET_URL}{GOOGLE_MASTER_SHEET_GRID}")
     df['date'] = pd.to_datetime(df['date'], format='%Y-%m-%d')
+    # filter from 1990 onwards as frequency is weekly before that
+    df = df[df['date'] >= pd.to_datetime('1990-01-01')]
     df.set_index('date', inplace=True)
+    df = df.resample('ME').last()
+    # detect frequency of each column
+    freq_dict = detect_column_frequency(df)
+    # calculate return based on frequency (df is daily price data)
+    return_df = calc_exact_period_return(df, freq_dict)
     # resample to monthend
     df = df.ffill()  # Forward fill all columns globally
     df = df.resample('ME').last()
-    return df
+    return_df = return_df.ffill().resample('ME').last()
+    return df, return_df, freq_dict
+
+def calc_correlation_monthly_quarterly(s_monthly: pd.Series, s_quarterly: pd.Series) -> float:
+    # Resample monthly series to quarterly by taking last value of each quarter
+    s_monthly_q = s_monthly.resample('Q').last()  # or .mean(), depending on your use case
+    # Align both series on their dates and drop NA values
+    aligned = pd.concat([s_monthly_q, s_quarterly], axis=1).dropna()
+    # Calculate correlation
+    corr = aligned.corr().iloc[0, 1]
+    return corr
 
 @st.cache_data
 def load_name_ref() -> pd.DataFrame:
