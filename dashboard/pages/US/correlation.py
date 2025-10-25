@@ -41,12 +41,12 @@ df_ret.reset_index(inplace=True)
 st.header('Correlation matrix')
 st.markdown("""
 <div style='font-size:16px; line-height:1.7'>
-<b><span style='color:black'>Data Frequency Handling:</span></b> Returns are calculated based on <i>each column's native frequency</i> (e.g. quarterly / monthly), then <span style='color:#388e3c'><b>forward-filled</b></span> to match the lower frequency (quarterly → monthly).
+<b><span>Data Frequency Handling:</span></b> Returns are calculated based on <i>each column's native frequency</i> (e.g. quarterly / monthly), then <span style='color:#388e3c'><b>forward-filled</b></span> to match the lower frequency (quarterly → monthly).
 <br><br>
 <i style='color:#616161'>Ideally, we should align to the lower frequency (monthly → quarterly) instead of forward fill, but for simplicity and initial analysis:</i>
 <ul>
-  <li><b style='color:black'>Full correlation matrix:</b> <span style='color:#388e3c'>forward fill</span></li>
-  <li><b style='color:black'>Individual pairs in rolling correlation:</b> <span style='color:#388e3c'>option to change frequency</span></li>
+  <li><b>Full correlation matrix:</b> <span style='color:#388e3c'>forward fill</span></li>
+  <li><b>Individual pairs in rolling correlation:</b> <span style='color:#388e3c'>option to change frequency</span></li>
 </ul>
 </div>
 """, unsafe_allow_html=True)
@@ -104,9 +104,9 @@ with r_col2:
 # frequency info
 st.markdown(f"""
 <div style='font-size:16px; line-height:1.7'>
-<b style='color:black'>Indicator months lag (selected above):</b> <span style='color:red'>{indicator_months_lag}</span><br>
-<b style='color:black'>ETF data frequency:</b> <span style='color:red'>{freq[selected_etf]}</span><br>
-<b style='color:black'>Indicator data frequency:</b> <span style='color:red'>{freq[selected_indicator]}</span>
+<b>Indicator months lag (selected above):</b> <span style='color:red'>{indicator_months_lag}</span><br>
+<b>ETF data frequency:</b> <span style='color:red'>{freq[selected_etf]}</span><br>
+<b>Indicator data frequency:</b> <span style='color:red'>{freq[selected_indicator]}</span>
 </div><br/>
 """, unsafe_allow_html=True)
 # refined frequency selection based on the lower frequency between etf and indicator
