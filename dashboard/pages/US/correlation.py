@@ -39,8 +39,17 @@ df_ret = pd.merge(etf_returns, indicator_returns, left_index=True, right_index=T
 df_ret.reset_index(inplace=True)
 
 st.header('Correlation matrix')
-st.write("Data frequency handling: Returns are calculated based on its own frequency (e.g. quarterly / monthly). \n And then forward filled the lower frequency (quarterly -> monthly).")
-st.write("Ideally we should align to the lower frequency (monthly -> quarterly) instead of forward fill, but for simplicity and initial analysis, we do forward fill here.")
+st.markdown("""
+<div style='font-size:16px; line-height:1.7'>
+<b><span style='color:black'>Data Frequency Handling:</span></b> Returns are calculated based on <i>each column's native frequency</i> (e.g. quarterly / monthly), then <span style='color:#388e3c'><b>forward-filled</b></span> to match the lower frequency (quarterly → monthly).
+<br><br>
+<i style='color:#616161'>Ideally, we should align to the lower frequency (monthly → quarterly) instead of forward fill, but for simplicity and initial analysis:</i>
+<ul>
+  <li><b style='color:black'>Full correlation matrix:</b> <span style='color:#388e3c'>forward fill</span></li>
+  <li><b style='color:black'>Individual pairs in rolling correlation:</b> <span style='color:#388e3c'>option to change frequency</span></li>
+</ul>
+</div>
+""", unsafe_allow_html=True)
 
 # select months lag
 indicator_months_lag = st.slider('Indicator Months lag', 0, 12, 0)
@@ -80,7 +89,6 @@ st.plotly_chart(fig, use_container_width=True, theme="streamlit", key=None, on_s
 
 # Rolling correlation
 st.header('Rolling correlation')
-st.write('Indicator months lag (selected above): ', indicator_months_lag)
 horizon = st.slider('Rolling window (month)', 6, 36, 6, 6)
 
 # select etf and indicator to show
@@ -92,8 +100,38 @@ with r_col1:
 with r_col2:
     selected_indicator_display = st.selectbox('Select Indicator', indicator_display, index=0)
     selected_indicator = indicator_display_map[selected_indicator_display]
-rolling_corr = df_ret[['date', selected_etf, selected_indicator]].copy()
-rolling_corr['correlation'] = rolling_corr[selected_etf].rolling(window=horizon).corr(rolling_corr[selected_indicator])
+
+# frequency info
+st.markdown(f"""
+<div style='font-size:16px; line-height:1.7'>
+<b style='color:black'>Indicator months lag (selected above):</b> <span style='color:red'>{indicator_months_lag}</span><br>
+<b style='color:black'>ETF data frequency:</b> <span style='color:red'>{freq[selected_etf]}</span><br>
+<b style='color:black'>Indicator data frequency:</b> <span style='color:red'>{freq[selected_indicator]}</span>
+</div><br/>
+""", unsafe_allow_html=True)
+# refined frequency selection based on the lower frequency between etf and indicator
+if freq[selected_etf] == 'yearly' or freq[selected_indicator] == 'yearly':
+    refined_freq = 'Y'
+elif freq[selected_etf] == 'quarterly' or freq[selected_indicator] == 'quarterly':
+    refined_freq = 'Q'
+else:
+    refined_freq = 'M'
+freq_options = ['M', 'Q', 'Y']
+selected_freq = st.selectbox('Data Frequency', options=freq_options, index=freq_options.index(refined_freq), disabled=False)
+
+# calculate rolling correlation
+if selected_freq == 'M':
+    tmp_ret = df_ret[['date', selected_etf, selected_indicator]].copy()
+elif selected_freq == 'Q':
+    tmp_ret = df_ret[['date', selected_etf, selected_indicator]].copy()
+    tmp_ret.set_index('date', inplace=True)
+    tmp_ret = tmp_ret.resample('QE').last().reset_index()
+elif selected_freq == 'Y':
+    tmp_ret = df_ret[['date', selected_etf, selected_indicator]].copy()
+    tmp_ret.set_index('date', inplace=True)
+    tmp_ret = tmp_ret.resample('YE').last().reset_index()
+rolling_corr = tmp_ret.copy()
+rolling_corr['correlation'] = tmp_ret[selected_etf].rolling(window=horizon).corr(tmp_ret[selected_indicator])
 rolling_corr = rolling_corr.drop(columns=[selected_etf, selected_indicator])
 rolling_corr = rolling_corr.dropna()
 
