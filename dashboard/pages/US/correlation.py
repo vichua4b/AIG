@@ -101,11 +101,11 @@ with r_col2:
     selected_indicator_display = st.selectbox('Select Indicator', indicator_display, index=0)
     selected_indicator = indicator_display_map[selected_indicator_display]
 
-# frequency info
+# frequency info (must be monthly for ETFs)
 st.markdown(f"""
 <div style='font-size:16px; line-height:1.7'>
 <b>Indicator months lag (selected above):</b> <span style='color:red'>{indicator_months_lag}</span><br>
-<b>ETF data frequency:</b> <span style='color:red'>{freq[selected_etf]}</span><br>
+<b>ETF data frequency:</b> <span style='color:red'>monthly</span><br>
 <b>Indicator data frequency:</b> <span style='color:red'>{freq[selected_indicator]}</span>
 </div><br/>
 """, unsafe_allow_html=True)
