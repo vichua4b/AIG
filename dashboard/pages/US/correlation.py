@@ -110,9 +110,9 @@ st.markdown(f"""
 </div><br/>
 """, unsafe_allow_html=True)
 # refined frequency selection based on the lower frequency between etf and indicator
-if freq[selected_etf] == 'yearly' or freq[selected_indicator] == 'yearly':
+if freq[selected_indicator] == 'yearly':
     refined_freq = 'Y'
-elif freq[selected_etf] == 'quarterly' or freq[selected_indicator] == 'quarterly':
+elif freq[selected_indicator] == 'quarterly':
     refined_freq = 'Q'
 else:
     refined_freq = 'M'
