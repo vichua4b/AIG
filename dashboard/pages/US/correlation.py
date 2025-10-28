@@ -52,7 +52,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # select months lag
-indicator_months_lag = st.slider('Indicator Months lag', 0, 12, 0)
+indicator_months_lag = st.slider('Indicator Months lag', 0, 48, 0)
 for indicator in indicator_list:
     df_ret[indicator] = df_ret[indicator].shift(indicator_months_lag)
 
@@ -89,10 +89,10 @@ st.plotly_chart(fig, use_container_width=True, theme="streamlit", key=None, on_s
 
 # Rolling correlation
 st.header('Rolling correlation')
-horizon = st.slider('Rolling window (month)', 6, 36, 6, 6)
+horizon = st.slider('Rolling window (month)', 3, 48, 6, 3)
 
 # select etf and indicator to show
-show_bg = st.checkbox('Show background 牛熊', value=False)
+show_bg = st.checkbox('Show background 牛熊', value=True)
 r_col1, r_col2 = st.columns(2)
 with r_col1:
     selected_etf_display = st.selectbox('Select ETF', etf_display, index=0)
@@ -130,6 +130,9 @@ elif selected_freq == 'Y':
     tmp_ret = df_ret[['date', selected_etf, selected_indicator]].copy()
     tmp_ret.set_index('date', inplace=True)
     tmp_ret = tmp_ret.resample('YE').last().reset_index()
+
+# filter date based on sdate and edate
+tmp_ret = tmp_ret[(tmp_ret['date'] >= pd.to_datetime(sdate)) & (tmp_ret['date'] <= pd.to_datetime(edate))]
 rolling_corr = tmp_ret.copy()
 rolling_corr['correlation'] = tmp_ret[selected_etf].rolling(window=horizon).corr(tmp_ret[selected_indicator])
 rolling_corr = rolling_corr.drop(columns=[selected_etf, selected_indicator])
@@ -162,9 +165,12 @@ import plotly.graph_objects as go
 import numpy as np
 st.header('Price history (log scale)')
 prices = df[[selected_etf, selected_indicator]].copy()
+# filter date based on sdate and edate
+prices = prices[(prices.index >= pd.to_datetime(sdate)) & (prices.index <= pd.to_datetime(edate))]
 prices_ln = np.log(prices)
 returns = df_ret[[selected_etf, selected_indicator]].copy()
 returns.index = df_ret['date']
+returns = returns[(returns.index >= pd.to_datetime(sdate)) & (returns.index <= pd.to_datetime(edate))]
 
 fig3 = go.Figure()
 
