@@ -54,7 +54,6 @@ st.markdown("""
 # Filter only high correlation values settings
 filter_high_corr = st.checkbox('Filter high correlation values only?', value=False)
 corr_threshold = st.slider('Correlation threshold', 0.0, 1.0, 0.4, 0.05) 
-
 # select months lag
 indicator_months_lag = st.slider('Indicator Months lag', 0, 48, 0)
 for indicator in indicator_list:
@@ -64,13 +63,12 @@ for indicator in indicator_list:
 col1, col2 = st.columns(2)
 with col1:
     sdate = st.date_input('Start date', min_value=df_ret['date'].min(), max_value=df_ret['date'].max(), value=df_ret['date'].min())
-
-    multiSelect_etf_display = st.multiselect('Select ETF', etf_display, default=etf_display)
+    multiSelect_etf_display = st.multiselect('Select ETF', etf_display, default=etf_display, disabled=filter_high_corr)
     multiSelect_etf = [etf_display_map[etf] for etf in multiSelect_etf_display]
 with col2:
     edate = st.date_input('End date', min_value=df_ret['date'].min(), max_value=df_ret['date'].max(), value=df_ret['date'].max())
 
-    multiSelect_indicator_display = st.multiselect('Select Indicator', indicator_display, default=indicator_display)
+    multiSelect_indicator_display = st.multiselect('Select Indicator', indicator_display, default=indicator_display, disabled=filter_high_corr)
     multiSelect_indicator = [indicator_display_map[indicator] for indicator in multiSelect_indicator_display]
 
 filtered_df = df_ret[(df_ret['date'] >= pd.to_datetime(sdate)) & (df_ret['date'] <= pd.to_datetime(edate))]
