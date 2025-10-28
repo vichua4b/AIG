@@ -51,6 +51,10 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
+# Filter only high correlation values settings
+filter_high_corr = st.checkbox('Filter high correlation values only?', value=False)
+corr_threshold = st.slider('Correlation threshold', 0.0, 1.0, 0.4, 0.05) 
+
 # select months lag
 indicator_months_lag = st.slider('Indicator Months lag', 0, 48, 0)
 for indicator in indicator_list:
@@ -77,6 +81,25 @@ correlation = correlation.drop(columns=['date'], index=['date'])
 correlation = correlation.round(2)
 # only include combination of etf and indicator
 correlation = correlation.loc[multiSelect_etf, multiSelect_indicator]
+
+# apply filter if needed
+if filter_high_corr:
+    correlation = correlation.mask(correlation.abs() < corr_threshold)
+    # drop rows and columns that are all NaN
+    correlation = correlation.dropna(how='all', axis=0)
+    correlation = correlation.dropna(how='all', axis=1)
+    
+    multiSelect_etf = correlation.index.tolist()
+    multiSelect_indicator = correlation.columns.tolist()
+
+    # refine etf_display and indicator_display based on the filtered correlation matrix
+    if correlation.empty:
+        st.warning('No correlation values exceed the threshold. Please adjust the threshold or selection.')
+    else:
+        etf_display = [f"{etf} - {name_map.get(etf, '')}" for etf in etf_list if etf in correlation.index]
+        etf_display = [e.rstrip(' - ') for e in etf_display]  # in case name_map returns empty string
+        indicator_display = [f"{indicator} - {name_map.get(indicator, '')}" for indicator in indicator_list if indicator in correlation.columns]
+        indicator_display = [i.rstrip(' - ') for i in indicator_display]  # in case name_map returns empty string
 
 # correlation heatmap
 # mask the upper triangle
