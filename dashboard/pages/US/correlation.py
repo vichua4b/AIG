@@ -99,6 +99,26 @@ if filter_high_corr:
         indicator_display = [f"{indicator} - {name_map.get(indicator, '')}" for indicator in indicator_list if indicator in correlation.columns]
         indicator_display = [i.rstrip(' - ') for i in indicator_display]  # in case name_map returns empty string
 
+# Add a download button for the correlation matrix
+# convert to long format for better readability
+csv_data = correlation.reset_index().melt(id_vars='index')
+csv_data.columns = ['ETF', 'Indicator', 'Correlation']
+# drop NaN rows
+csv_data = csv_data.dropna()
+# Add sdate and edate and month lag info to the csv file
+csv_data['sdate'] = sdate.strftime('%Y-%m-%d')
+csv_data['edate'] = edate.strftime('%Y-%m-%d')
+csv_data['months_lag'] = str(indicator_months_lag)
+# rearrange columns
+csv_data = csv_data[['sdate', 'edate', 'months_lag', 'ETF', 'Indicator', 'Correlation']]
+csv_data = csv_data.to_csv(index=False).encode('utf-8')
+
+st.download_button(
+    label="Download correlation matrix as CSV",
+    data=csv_data,
+    file_name='correlation_matrix.csv',
+    mime='text/csv',
+)
 # correlation heatmap
 # mask the upper triangle
 # mask = np.triu(np.ones_like(correlation, dtype=bool))
