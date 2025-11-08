@@ -28,9 +28,9 @@ indicator_list = indicator_prices.columns.tolist()
 etf_display = [f"{etf} - {name_map.get(etf, '')}" for etf in etf_list]
 etf_display = [e.rstrip(' - ') for e in etf_display]  # in case name_map returns empty string
 etf_display_map = dict(zip(etf_display, etf_list))
-indicator_display = [f"{indicator} - {name_map.get(indicator, '')}" for indicator in indicator_list]
-indicator_display = [i.rstrip(' - ') for i in indicator_display]  # in case name_map returns empty string
+indicator_display = [f"{name_map.get(indicator, indicator)}" for indicator in indicator_list]
 indicator_display_map = dict(zip(indicator_display, indicator_list))
+indicator_map = dict(zip(indicator_list, indicator_display))
 
 # combine etf and indicator prices
 df = pd.merge(etf_prices, indicator_prices, left_index=True, right_index=True, how='inner')
@@ -79,6 +79,11 @@ correlation = correlation.drop(columns=['date'], index=['date'])
 correlation = correlation.round(2)
 # only include combination of etf and indicator
 correlation = correlation.loc[multiSelect_etf, multiSelect_indicator]
+# map column to indicator_display_map
+correlation.columns = [indicator_map.get(col, "col") for col in correlation.columns]
+# sort index and columns
+correlation = correlation.sort_index().sort_index(axis=1)
+
 
 # apply filter if needed
 if filter_high_corr:
@@ -96,8 +101,7 @@ if filter_high_corr:
     else:
         etf_display = [f"{etf} - {name_map.get(etf, '')}" for etf in etf_list if etf in correlation.index]
         etf_display = [e.rstrip(' - ') for e in etf_display]  # in case name_map returns empty string
-        indicator_display = [f"{indicator} - {name_map.get(indicator, '')}" for indicator in indicator_list if indicator in correlation.columns]
-        indicator_display = [i.rstrip(' - ') for i in indicator_display]  # in case name_map returns empty string
+        indicator_display = [f"{name_map.get(indicator, '')}" for indicator in indicator_list if indicator in correlation.columns]
 
 # Add a download button for the correlation matrix
 # convert to long format for better readability
