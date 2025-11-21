@@ -8,8 +8,12 @@ etf_prices, etf_returns = dh.load_etf_prices()
 indicator_prices, indicator_returns, freq = dh.load_indicator_prices()
 name_ref = dh.load_name_ref()
 name_map = dict(zip(name_ref['Ticker'], name_ref['Name']))
-
 bull_bear = dh.load_us_bull_bear_data()
+
+if st.button("Refresh cached data"):
+    st.cache_data.clear()
+    st.rerun()
+
 def get_bull_bear_color(comment):
     if '牛' in comment:
         return 'rgba(0,200,0,0.15)'  # light green for bull
