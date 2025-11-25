@@ -185,8 +185,17 @@ def load_indicator_prices() -> pd.DataFrame:
     df = df[df['date'] >= pd.to_datetime('1990-01-01')]
     df.set_index('date', inplace=True)
     df = df.resample('ME').last()
+
+    # which column is not in float64?
+    non_numeric_cols = [col for col in df.columns if df[col].dtype != 'float64']
+    if non_numeric_cols:
+        st.warning(f"The following columns were removed because they are not numeric: {', '.join(non_numeric_cols)}")
+    # Remove non-numeric columns
+    df = df.select_dtypes(include=[np.number])
+
     # detect frequency of each column
     freq_dict = detect_column_frequency(df)
+    
     # calculate return based on frequency (df is daily price data)
     return_df = calc_exact_period_return(df, freq_dict)
     # resample to monthend
