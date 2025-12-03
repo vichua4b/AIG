@@ -39,8 +39,8 @@ indicator_map = dict(zip(indicator_list, indicator_display))
 # combine etf and indicator prices
 df = pd.merge(etf_prices, indicator_prices, left_index=True, right_index=True, how='inner')
 # returns
-df_ret = pd.merge(etf_returns, indicator_returns, left_index=True, right_index=True, how='inner')
-df_ret.reset_index(inplace=True)
+df_ret_original = pd.merge(etf_returns, indicator_returns, left_index=True, right_index=True, how='inner')
+df_ret_original.reset_index(inplace=True)
 
 st.header('Correlation matrix')
 st.markdown("""
@@ -60,8 +60,9 @@ filter_high_corr = st.checkbox('Filter high correlation values only?', value=Fal
 corr_threshold = st.slider('Correlation threshold', 0.0, 1.0, 0.4, 0.05) 
 # select months lag
 indicator_months_lag = st.slider('Indicator Months lag', 0, 48, 0)
+df_ret = df_ret_original.copy()
 for indicator in indicator_list:
-    df_ret[indicator] = df_ret[indicator].shift(indicator_months_lag)
+    df_ret[indicator] = df_ret_original[indicator].shift(indicator_months_lag)
 
 # select start and end date
 col1, col2 = st.columns(2)
@@ -74,6 +75,7 @@ with col2:
 
     multiSelect_indicator_display = st.multiselect('Select Indicator', indicator_display, default=indicator_display, disabled=filter_high_corr)
     multiSelect_indicator = [indicator_display_map[indicator] for indicator in multiSelect_indicator_display]
+
 
 filtered_df = df_ret[(df_ret['date'] >= pd.to_datetime(sdate)) & (df_ret['date'] <= pd.to_datetime(edate))]
 correlation = filtered_df.corr()
@@ -127,6 +129,7 @@ st.download_button(
     file_name='correlation_matrix.csv',
     mime='text/csv',
 )
+
 # correlation heatmap
 # mask the upper triangle
 # mask = np.triu(np.ones_like(correlation, dtype=bool))
