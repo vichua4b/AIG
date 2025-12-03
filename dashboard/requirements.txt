@@ -4,3 +4,4 @@ numpy
 plotly.express
 quantstats
 IPython
+openpyxl
