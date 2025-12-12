@@ -215,11 +215,16 @@ st.plotly_chart(fig2, use_container_width=True, theme="streamlit", key=None, on_
 # Price history
 import plotly.graph_objects as go
 import numpy as np
-st.header('Price history (log scale)')
+st.header('Price history')
+log_scale = st.toggle("Log Price?", value=False)
+
 prices = df[[selected_etf, selected_indicator]].copy()
 # filter date based on sdate and edate
 prices = prices[(prices.index >= pd.to_datetime(sdate)) & (prices.index <= pd.to_datetime(edate))]
-prices_ln = np.log(prices)
+if log_scale:
+    prices_ln = np.log(prices)
+else:
+    prices_ln = prices
 returns = df_ret[[selected_etf, selected_indicator]].copy()
 returns.index = df_ret['date']
 returns = returns[(returns.index >= pd.to_datetime(sdate)) & (returns.index <= pd.to_datetime(edate))]
